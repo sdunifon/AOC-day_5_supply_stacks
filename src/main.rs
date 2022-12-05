@@ -1,11 +1,11 @@
 use std::fmt::{Display, Formatter};
 
-mod pom_parse;
 mod pest_parse;
+mod pom_parse;
 
 fn main() {
-    let c = Crate {name: 'A'};
-    println!("Hello, world! {}",c);
+    let c = Crate { name: 'A' };
+    println!("Hello, world! {}", c);
 }
 
 #[derive(Debug)]
@@ -24,13 +24,12 @@ struct Stack {
 }
 
 #[cfg(test)]
-mod tests{
-    use std::{assert_eq, format};
+mod tests {
     use super::*;
+    use std::{assert_eq, format};
 
     #[test]
-   fn test_crate_display() {
-
-       assert_eq!(format!("{}", Crate {name: 'A'}), "[A]");
-   }
+    fn test_crate_display() {
+        assert_eq!(format!("{}", Crate { name: 'A' }), "[A]");
+    }
 }

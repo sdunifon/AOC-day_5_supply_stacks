@@ -1,4 +1,6 @@
-fn pest_parse(){todo!()}
+fn pest_parse() {
+    todo!()
+}
 
 #[cfg(test)]
 mod tests {
