@@ -1,15 +1,27 @@
 use pom::char_class::space;
-use pom::parser::{one_of, sym, Parser};
+use pom::parser::{one_of, sym, Parser, list};
 
 fn pom_parse() {}
 
 pub mod parse {
+    use std::fmt::Debug;
     use pom::parser::{list, one_of, sym};
     use pom::Parser;
+    use crate::Crate;
 
-    enum CrateType {
-        Letter(u8),
-        None,
+
+    pub enum CrateType {
+    Letter(u8),
+    None,
+}
+
+    impl Debug for CrateType {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            match self {
+                CrateType::Letter(c) => write!(f, "{}", char::from(*c) ),
+                CrateType::None => write!(f, "-"),
+            }
+        }
     }
 
     pub fn space() -> Parser<u8, ()> {
@@ -37,7 +49,7 @@ pub mod parse {
         array
     }
     pub fn crate_spot() -> Parser<u8, CrateType> {
-        letter_crate().convert(|letter| CrateType::Letter(letter)) | no_crate_column().convert(|_| CrateType::None)
+        letter_crate().map(|letter| CrateType::Letter(letter)) | no_crate_column().map(|_| CrateType::None)
     }
 
     pub fn row_end() -> Parser<u8, u8> {
@@ -53,13 +65,13 @@ fn box_parser(input: &'static str) -> Result<u8, pom::Error> {
 #[cfg(test)]
 pub mod tests {
     use std::{assert_eq, println};
-    use crate::pom_parse::{box_parser};
+    use crate::pom_parse::{box_parser, pom_parse};
     use pom::parser::{list, none_of, seq, sym};
     use pom::set::Set;
     use crate::pom_parse::parse::crate_spot;
     use super::parse;
 
-    pub fn test_input() -> String {
+    pub fn test_input() -> &'static [u8] {
         r###"
     [V] [G]             [H]
     [Z] [H] [Z]         [T] [S]
@@ -70,7 +82,7 @@ pub mod tests {
     [D] [L] [H] [G] [F] [Q] [M] [G] [W]
     [N] [C] [Q] [H] [N] [D] [Q] [M] [B]
     1   2   3   4   5   6   7   8   9 "###
-            .into()
+            .as_bytes()
     }
     #[test]
     fn test_pow() {
@@ -97,7 +109,7 @@ pub mod tests {
 
     #[test]
     fn test_no_crate_column() {
-        let str = b"[B]     [C] [D]";
+        let str = b"[B]    [C] [D]";
         let parser = parse::letter_crate() + parse::no_crate_column() + parse::letter_crate();
         let output = parser.parse(str);
         dbg!("!{:?}!", &output);
@@ -111,12 +123,16 @@ pub mod tests {
     }
     #[test]
     fn parse_array() {
-        let str = b"[A] [C]     [D]";
+        let b = test_input();
+        let str = b"[A] [C]      [D]";
+        let str2 = "[B] [M] [V] [N]     [F] [D] [N]";
+
+        let parser = parse::row();
+        let azz = parser.parse(str2.as_bytes());
+        let output = parser.parse(b);
         let parser = parse::letter_crate() + parse::no_crate_column() + parse::letter_crate();
         let g = list(crate_spot(), sym(b' '));
-        let a = g.parse(str);
-        panic!("{:?}",a);
-        // assert_eq!(g.parse(str), Ok((vec![b'B', b'C', b'D'], &b""[..])));
+        let a = g.parse(test_input());
 
     }
 }
